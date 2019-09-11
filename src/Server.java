@@ -8,15 +8,38 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Scanner;
 
 public class Server {
 	private static ServerSocket listener;
 	
 	public static  void main(String[] args) throws Exception {
+		int portNumber = 5000;
+		boolean validPort = false;
+		
+        while(!validPort) {
+        	System.out.print("Enter a port number : ");
+        	Scanner scanner = new Scanner(System.in);
+        	String inputPort = scanner.nextLine();
+
+        	try {
+        		portNumber = Integer.parseInt(inputPort);
+        	} catch(Exception e) {
+        		System.out.println("Port number must be between 5000 and 5050");
+        		portNumber = 0;
+        	}
+        	if(portNumber >= 5000 && portNumber <= 5050) {
+        		validPort = true;
+        	}
+        	if(portNumber < 5000 || portNumber > 5050) {
+        		System.out.println("Port number must be between 5000 and 5050");
+        	}
+        }
+		
 		int clientNumber = 0;
 		
 		String serverAddress = "127.0.0.1";
-		int serverPort = 5000;
+		int serverPort = portNumber;
 		
 		listener = new ServerSocket();
 		listener.setReuseAddress(true);
