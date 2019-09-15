@@ -1,14 +1,24 @@
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 import java.io.DataOutputStream;
+import java.io.File;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.List;
 import java.util.Scanner;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 
 public class Server {
 	private static ServerSocket listener;
@@ -49,6 +59,7 @@ public class Server {
 		
 		System.out.format("The server is running on %s:%d%n", serverAddress, serverPort);
 		
+		
 		try {
 			while(true) {
 				new ClientHandler(listener.accept(), clientNumber++).start();
@@ -64,6 +75,7 @@ public class Server {
 	private static class ClientHandler extends Thread {
 		private Socket socket;
 		private int clientNumber;
+		private static String[] validKeywords = {"cd", "cd..", "ls", "mkdir", "upload", "download", "exit"};
 		
 		public ClientHandler(Socket socket, int clientNumber) {
 			this.socket = socket;
@@ -73,8 +85,23 @@ public class Server {
 		
 		public void run() {
 			try {
+				String currentDirectory = "";
+				DataInputStream in = new DataInputStream(socket.getInputStream());
 				DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+				
 				out.writeUTF("Hello from server - you are client#" + clientNumber);
+				boolean connected = true;
+				while (connected) {
+					String clientMessage = in.readUTF();
+					System.out.println("Client says: "+clientMessage);
+					if (validCommand(clientMessage)) {
+						String[] command = parseCommand(clientMessage);
+						//listeDirectoryContent();
+					}
+					else {
+						out.writeUTF("Invalid command");
+					}
+				}
 				
 			} catch(IOException e) {
 				System.out.println("Error handling client#" + clientNumber + ":" + e);
@@ -88,6 +115,76 @@ public class Server {
 				}
 				System.out.println("Connection with client#" + clientNumber + "closed");
 			}
+		}
+		public static boolean validCommand(String command) {
+			try {
+				if ( command == null || command.isEmpty() ) {
+					return false;
+				}
+				String[] splitedCommand = command.split("\\s+");
+				boolean containValidKeyword = false;
+				String keyword;
+				for	(int i = 0; i<validKeywords.length; i++) {
+					if (validKeywords[i].equals(splitedCommand[0])) {
+						containValidKeyword = true;
+						keyword = validKeywords[i];
+					}
+				}
+				if (!containValidKeyword) {
+					return false;
+				}
+				
+				return true;
+			}
+			catch (Exception e) {
+				return false;
+			}
+		}
+		public static String[] parseCommand(String command) {
+			try {
+				String[] splitedCommand = command.split("\\s+");
+				return splitedCommand;
+			}
+			catch (Exception e) {
+				return null;
+			}
+		}
+		public static void changeDirectory() {
+			
+		}
+		public static String listeDirectoryContent(ObjectOutputStream out) {
+			String anwser = "";
+			File dir = new File(System.getProperty("user.dir") + "/../tcp");
+            String childs[] = dir.list();
+            for (String child: childs) {
+                if (child.contains(".")) {
+                	anwser += ("[File] " + child + "\n");
+                }
+            }
+            try {
+				out.writeObject(anwser);
+				out.flush();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+            return anwser;
+		}
+		public static void upload() {
+			
+		}
+		public static void download() {
+	
+		}
+		public static void exit(Socket socket) {
+			try {
+				socket.close();
+			} catch (IOException e) {
+			}
+		}
+		public static String formatClientMessage(String message) {
+			//[132.207.29.107:42975 - 2019-09-15@13:02:01] : upload allo.docx
+			String builtMessage = "["+" - "+"@"+"] : "+message;
+			return "";
 		}
 	}
 }

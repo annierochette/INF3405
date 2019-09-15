@@ -1,6 +1,7 @@
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -22,39 +23,65 @@ public class Client {
 
 		Socket clientSocket = null;
 		int port = 5000;
-		boolean isPortValid = false;
-		Scanner input = new Scanner(System.in);
-		while (!isPortValid) {
-			System.out.println("Entrer un port entre 5000 et 5050");
-			String inputPort = input.nextLine();
-			try {
-				port = Integer.parseInt(inputPort);
-			}
-			catch (Exception e) {
-				System.out.print(port +" is a invalid port");
-				port = 0;
-			}
-			if (port <= 5050 && port >= 5000) {
-				isPortValid = true;
-			}
-			if (!isPortValid) {
-				System.out.println(port +" is a invalid port");
-			}
-		}
 		String serverAddress = "127.0.0.1";
-		// Création d'un socket client vers le serveur. Ici 127.0.0.1 est indicateur que
-		// le serveur s'exécute sur la machine locale. Il faut changer 127.0.0.1 pour
-		// l'adresse IP du serveur si celui-ci ne s'exécute pas sur la même machine. Le port est 5000.
-		clientSocket = new Socket(serverAddress, port);
+		boolean isPortValid = false;
+		boolean isIPAddressValid = false;
+		boolean isConnected = false;
+		Scanner input = new Scanner(System.in);
+		DataInputStream in = null;
+		DataOutputStream out = null;
+		
+		while (true) {
+			while (!isPortValid) {
+				System.out.println("Entrer un port entre 5000 et 5050");
+				String inputPort = input.nextLine();
+				try {
+					port = Integer.parseInt(inputPort);
+				}
+				catch (Exception e) {
+					System.out.print(port +" is a invalid port");
+					port = 0;
+				}
+				if (port <= 5050 && port >= 5000) {
+					isPortValid = true;
+				}
+				if (!isPortValid) {
+					System.out.println(port +" is a invalid port");
+				}
+			}
+			while (!isIPAddressValid) {
+				System.out.println("Entrer IP Address");
+				String inputAddress = input.nextLine();
+				
+				if (!checkIPAddressValide(inputAddress)) {
+					System.out.println(serverAddress +" is a invalid IP Address");
+				}
+				else {
+					isIPAddressValid = true;
+					serverAddress = inputAddress;
+				}
+			}
 			
-		System.out.format("The Server is running on $s:$d$n", serverAddress, port);
+			// Création d'un socket client vers le serveur. Ici 127.0.0.1 est indicateur que
+			// le serveur s'exécute sur la machine locale. Il faut changer 127.0.0.1 pour
+			// l'adresse IP du serveur si celui-ci ne s'exécute pas sur la même machine. Le port est 5000.
+			if (!isConnected) {
+			clientSocket = new Socket(serverAddress, port);
+			isConnected = true;	
+			System.out.format("The Server is running on $s:$d$n", serverAddress, port);
+				
+			in = new DataInputStream(clientSocket.getInputStream());
+			out = new DataOutputStream(clientSocket.getOutputStream());
+			String helloMessageFromServer = in.readUTF();
+			System.out.println(helloMessageFromServer);
+			}
+				
 			
-		DataInputStream in = new DataInputStream(clientSocket.getInputStream());
-			
-		String helloMessageFromServer = in.readUTF();
-		System.out.println(helloMessageFromServer);
-			
-		clientSocket.close();
+			String inputPort = input.nextLine();
+			out.writeUTF(inputPort);
+			String serverMessage = in.readUTF();
+			System.out.println(serverMessage);
+		}
 	}
 
 	// Fonction permettant de lire un fichier et de stocker son contenu dans une liste.
@@ -91,4 +118,33 @@ public class Client {
 			out.close();
 		}
 	}
+	public static boolean checkIPAddressValide (String IPAddress) {
+	    try {
+	    	//null check
+	        if ( IPAddress == null || IPAddress.isEmpty() ) {
+	            return false;
+	        }
+	        //address format is always the following x.x.x.x where x can be a value between 0-255
+	        String[] subaddress = IPAddress.split( "\\." );
+	        if ( subaddress.length != 4 ) {
+	            return false;
+	        }
+	        //check if x is between 0-255 for each section
+	        for ( String s : subaddress ) {
+	            int i = Integer.parseInt( s );
+	            if ( (i < 0) || (i > 255) ) {
+	                return false;
+	            }
+	        }
+	        //must finish with a number
+	        if ( IPAddress.endsWith(".") ) {
+	            return false;
+	        }
+	        return true;
+	    } catch (Exception e) {
+	    	// if any exception happens, IP is not valid
+	        return false;
+	    }
+	}
+
 }
