@@ -14,6 +14,8 @@ import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Scanner;
 import java.util.stream.Collectors;
@@ -47,7 +49,6 @@ public class Server {
         }
 		
 		int clientNumber = 0;
-		
 		String serverAddress = "127.0.0.1";
 		int serverPort = portNumber;
 		
@@ -89,14 +90,49 @@ public class Server {
 				DataInputStream in = new DataInputStream(socket.getInputStream());
 				DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 				
+				//ObjectOutputStream oos = new ObjectOutputStream(new BufferedOutputStream(socket.getOutputStream()));
+	            //oos.flush();
+	            //ObjectInputStream ois = new ObjectInputStream(new BufferedInputStream(socket.getInputStream()));
+				formatClientMessage(socket, "blabla");//
+				
 				out.writeUTF("Hello from server - you are client#" + clientNumber);
 				boolean connected = true;
 				while (connected) {
 					String clientMessage = in.readUTF();
-					System.out.println("Client says: "+clientMessage);
+					formatClientMessage(socket, clientMessage);
 					if (validCommand(clientMessage)) {
 						String[] command = parseCommand(clientMessage);
-						//listeDirectoryContent();
+						
+						if (command[0].equals(validKeywords[0])) {
+							//cd
+							changeDirectory();
+						}
+						if (command[0].equals(validKeywords[1])) {
+							//cd..	
+							
+						}
+						if (command[0].equals(validKeywords[2])) {
+							//ls
+							listeDirectoryContent(out);
+						}
+						if (command[0].equals(validKeywords[3])) {
+							//mkdir
+						}
+						if (command[0].equals(validKeywords[4])) {
+							//upload
+							upload();
+						}
+						if (command[0].equals(validKeywords[5])) {
+							//download
+							download();
+						}
+						if (command[0].equals(validKeywords[6])) {
+							//exit
+							exit(socket, in, out);
+						}
+						else {
+							out.writeUTF("Invalid command");
+						}
 					}
 					else {
 						out.writeUTF("Invalid command");
@@ -152,9 +188,9 @@ public class Server {
 		public static void changeDirectory() {
 			
 		}
-		public static String listeDirectoryContent(ObjectOutputStream out) {
+		public static String listeDirectoryContent(DataOutputStream out) {
 			String anwser = "";
-			File dir = new File(System.getProperty("user.dir") + "/../tcp");
+			File dir = new File(System.getProperty("user.dir"));
             String childs[] = dir.list();
             for (String child: childs) {
                 if (child.contains(".")) {
@@ -162,8 +198,7 @@ public class Server {
                 }
             }
             try {
-				out.writeObject(anwser);
-				out.flush();
+				out.writeUTF(anwser);
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -175,15 +210,19 @@ public class Server {
 		public static void download() {
 	
 		}
-		public static void exit(Socket socket) {
+		public static void exit(Socket socket, DataInputStream in, DataOutputStream out) {
 			try {
+				in.close();
+				out.close();
 				socket.close();
 			} catch (IOException e) {
 			}
 		}
-		public static String formatClientMessage(String message) {
-			//[132.207.29.107:42975 - 2019-09-15@13:02:01] : upload allo.docx
-			String builtMessage = "["+" - "+"@"+"] : "+message;
+		public static String formatClientMessage(Socket socket, String message) {
+			DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd@HH:mm:ss");  
+			LocalDateTime now = LocalDateTime.now();  
+			String builtMessage = "["+(socket.getInetAddress().toString()).substring(1)+":"+socket.getLocalPort()+" - "+dtf.format(now)+"] : "+message;
+			System.out.println(builtMessage);
 			return "";
 		}
 	}
