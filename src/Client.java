@@ -24,8 +24,8 @@ public class Client {
 		Socket clientSocket = null;
 		int port = 5000;
 		String serverAddress = "127.0.0.1";
-		boolean isPortValid = false;
-		boolean isIPAddressValid = false;
+		boolean isPortValid = true;//devcode
+		boolean isIPAddressValid = true;//devcode
 		boolean isConnected = false;
 		Scanner input = new Scanner(System.in);
 		DataInputStream in = null;
@@ -76,11 +76,23 @@ public class Client {
 			System.out.println(helloMessageFromServer);
 			}
 				
-			
+			System.out.println("Awaiting command...");
 			String inputPort = input.nextLine();
+			System.out.println(inputPort+ " scanned");
 			out.writeUTF(inputPort);
-			String serverMessage = in.readUTF();
-			System.out.println(serverMessage);
+			System.out.println(inputPort+ " sent");
+			if (!inputPort.contains("exit")) { //fix
+				String serverMessage = in.readUTF();
+				System.out.println(serverMessage);
+				
+			}
+			else {
+				isConnected = false;
+				isPortValid = false;
+				isIPAddressValid = false;
+				clientSocket = null;
+			}
+			System.out.println("client reach end of current loop");
 		}
 	}
 

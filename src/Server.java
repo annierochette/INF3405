@@ -27,7 +27,7 @@ public class Server {
 	
 	public static  void main(String[] args) throws Exception {
 		int portNumber = 5000;
-		boolean validPort = false;
+		boolean validPort = true;//devcode
 		
         while(!validPort) {
         	System.out.print("Enter a port number : ");
@@ -86,14 +86,13 @@ public class Server {
 		
 		public void run() {
 			try {
-				String currentDirectory = "";
+				String currentDirectory = System.getProperty("user.dir");
 				DataInputStream in = new DataInputStream(socket.getInputStream());
 				DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 				
 				//ObjectOutputStream oos = new ObjectOutputStream(new BufferedOutputStream(socket.getOutputStream()));
 	            //oos.flush();
 	            //ObjectInputStream ois = new ObjectInputStream(new BufferedInputStream(socket.getInputStream()));
-				formatClientMessage(socket, "blabla");//
 				
 				out.writeUTF("Hello from server - you are client#" + clientNumber);
 				boolean connected = true;
@@ -102,36 +101,39 @@ public class Server {
 					formatClientMessage(socket, clientMessage);
 					if (validCommand(clientMessage)) {
 						String[] command = parseCommand(clientMessage);
-						
 						if (command[0].equals(validKeywords[0])) {
 							//cd
-							changeDirectory();
+						 	currentDirectory = changeDirectory(currentDirectory, command[1]);
+						 	out.writeUTF("200");
 						}
-						if (command[0].equals(validKeywords[1])) {
+						else if (command[0].equals(validKeywords[1])) {
 							//cd..	
-							
+							currentDirectory = changeDirectory(currentDirectory, "..");
+							out.writeUTF("200");
 						}
-						if (command[0].equals(validKeywords[2])) {
+						else if (command[0].equals(validKeywords[2])) {
 							//ls
-							listeDirectoryContent(out);
+							listeDirectoryContent(currentDirectory, out);
 						}
-						if (command[0].equals(validKeywords[3])) {
+						else if (command[0].equals(validKeywords[3])) {
 							//mkdir
+							createDirectory(currentDirectory, command[1]);
+							out.writeUTF("200");
 						}
-						if (command[0].equals(validKeywords[4])) {
+						else if (command[0].equals(validKeywords[4])) {
 							//upload
 							upload();
 						}
-						if (command[0].equals(validKeywords[5])) {
+						else if (command[0].equals(validKeywords[5])) {
 							//download
 							download();
 						}
-						if (command[0].equals(validKeywords[6])) {
+						else if (command[0].equals(validKeywords[6])) {
 							//exit
 							exit(socket, in, out);
 						}
 						else {
-							out.writeUTF("Invalid command");
+							out.writeUTF("Command not found");
 						}
 					}
 					else {
@@ -185,24 +187,63 @@ public class Server {
 				return null;
 			}
 		}
-		public static void changeDirectory() {
-			
+		public static String changeDirectory(String currentDir, String target) {
+			String newDir = "";
+			if (target.equals("..")) {
+				System.out.println(previousDirectory(currentDir));//devcode
+				return previousDirectory(currentDir);
+			}
+			if (isDirValid(currentDir, target)) {
+				newDir = currentDir +"\\"+target;
+				System.out.println(newDir);//devcode
+			}
+			else {
+				//nothing
+			}
+			return newDir;
 		}
-		public static String listeDirectoryContent(DataOutputStream out) {
+		public static String previousDirectory(String currentDir) {
+			while (currentDir.charAt(currentDir.length()-1) != '\\' && currentDir != null && currentDir.length() > 0) {
+				currentDir = currentDir.substring(0, currentDir.length() - 1);
+			}
+			currentDir = currentDir.substring(0, currentDir.length() - 1);
+			return currentDir;
+		}
+		public static void createDirectory(String currentDir, String newDir) {
+			new File(currentDir+"\\"+newDir).mkdirs();
+		}
+		public static String listeDirectoryContent(String currentDir, DataOutputStream out) {
 			String anwser = "";
-			File dir = new File(System.getProperty("user.dir"));
-            String childs[] = dir.list();
-            for (String child: childs) {
-                if (child.contains(".")) {
+			System.out.println(currentDir); //dev code
+			File dir = new File(currentDir);
+            File childs[] = dir.listFiles();
+            for (File child: childs) {
+                if (!child.isDirectory()) {
                 	anwser += ("[File] " + child + "\n");
                 }
+                else {
+                	anwser +=("[Dir.] "+ child +"\n");
+                }
+                
             }
             try {
 				out.writeUTF(anwser);
-			} catch (IOException e) {
+			}
+            catch (IOException e) {
 				e.printStackTrace();
 			}
             return anwser;
+		}
+		public static boolean isDirValid(String currentDir, String targetDir) {
+			String anwser = "";
+			File dir = new File(currentDir);
+			String childs[] = dir.list();
+            for (String child: childs) {
+                if (child.toString().equals(targetDir)) {
+                	return true;
+                }
+            }
+            return false;
 		}
 		public static void upload() {
 			
@@ -215,7 +256,8 @@ public class Server {
 				in.close();
 				out.close();
 				socket.close();
-			} catch (IOException e) {
+			} 
+			catch (IOException e) {
 			}
 		}
 		public static String formatClientMessage(Socket socket, String message) {
@@ -223,7 +265,7 @@ public class Server {
 			LocalDateTime now = LocalDateTime.now();  
 			String builtMessage = "["+(socket.getInetAddress().toString()).substring(1)+":"+socket.getLocalPort()+" - "+dtf.format(now)+"] : "+message;
 			System.out.println(builtMessage);
-			return "";
+			return builtMessage;
 		}
 	}
 }
