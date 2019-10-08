@@ -87,6 +87,8 @@ public class Client {
 				
 			}
 			else {
+				String serverMessage = in.readUTF();
+				System.out.println(serverMessage);
 				isConnected = false;
 				isPortValid = false;
 				isIPAddressValid = false;

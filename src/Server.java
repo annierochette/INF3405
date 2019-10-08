@@ -103,8 +103,13 @@ public class Server {
 						String[] command = parseCommand(clientMessage);
 						if (command[0].equals(validKeywords[0])) {
 							//cd
-						 	currentDirectory = changeDirectory(currentDirectory, command[1]);
-						 	out.writeUTF("200");
+							if (command.length > 1) {
+								currentDirectory = changeDirectory(currentDirectory, command[1]);
+							 	out.writeUTF("Vous etes dans le dossier " + command[1] +".");
+							}
+							else {
+								out.writeUTF("nom non trouver");
+							}
 						}
 						else if (command[0].equals(validKeywords[1])) {
 							//cd..	
@@ -117,20 +122,40 @@ public class Server {
 						}
 						else if (command[0].equals(validKeywords[3])) {
 							//mkdir
-							createDirectory(currentDirectory, command[1]);
-							out.writeUTF("200");
+							if (command.length > 1) {
+								createDirectory(currentDirectory, command[1]);
+								//out.writeUTF("200");
+								out.writeUTF("Le dossier " + command[1] + " a ete cree.");
+							}
+							else {
+								out.writeUTF("nom non trouver");
+							}
 						}
 						else if (command[0].equals(validKeywords[4])) {
 							//upload
-							upload();
+							if (command.length > 1) {
+								upload();
+								out.writeUTF("Le fichier " + command[1] + " a bien ete televerse");
+							}
+							else {
+								out.writeUTF("nom non trouver");
+							}
 						}
 						else if (command[0].equals(validKeywords[5])) {
 							//download
-							download();
+							if (command.length > 1) {
+								download();
+								out.writeUTF("Le fichier " + command[1] + " a bien ete telecharger");
+							}
+							else {
+								out.writeUTF("nom non trouver");
+							}
 						}
 						else if (command[0].equals(validKeywords[6])) {
 							//exit
+							out.writeUTF("Vous avez ete deconnecte avec succes");
 							exit(socket, in, out);
+							connected = false;
 						}
 						else {
 							out.writeUTF("Command not found");
@@ -216,13 +241,14 @@ public class Server {
 			String anwser = "";
 			System.out.println(currentDir); //dev code
 			File dir = new File(currentDir);
-            File childs[] = dir.listFiles();
-            for (File child: childs) {
-                if (!child.isDirectory()) {
-                	anwser += ("[File] " + child + "\n");
+            //File childs[] = dir.listFiles();
+			String childs[] = dir.list();
+            for (String child: childs) {
+                if (!child.contains(".")) {
+                	anwser += ("[Folder] " + child + "\n");
                 }
                 else {
-                	anwser +=("[Dir.] "+ child +"\n");
+                	anwser +=("[File] "+ child +"\n");
                 }
                 
             }
