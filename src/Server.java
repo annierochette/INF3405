@@ -241,14 +241,14 @@ public class Server {
 			String anwser = "";
 			System.out.println(currentDir); //dev code
 			File dir = new File(currentDir);
-            //File childs[] = dir.listFiles();
+            File childFiles[] = dir.listFiles();
 			String childs[] = dir.list();
-            for (String child: childs) {
-                if (!child.contains(".")) {
-                	anwser += ("[Folder] " + child + "\n");
+            for (int i = 0; i < childs.length; i++) {
+                if (childFiles[i].isDirectory()) {
+                	anwser += ("[Folder] " + childs[i] + "\n");
                 }
                 else {
-                	anwser +=("[File] "+ child +"\n");
+                	anwser +=("[File] "+ childs[i] +"\n");
                 }
                 
             }
