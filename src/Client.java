@@ -2,6 +2,7 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -13,6 +14,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 import java.util.Stack;
+
+import com.sun.nio.sctp.SendFailedNotification;
 
 /** Le client doit �tre capable de lire un fichier texte et dÕenvoyer son contenu au serveur qui retransmettra aussit™t son contenu au client. Ce dernier devra intercepter le contenu du fichier texte. Une fois la rŽception terminŽe, le serveur devra inverser le contenu du fichier de sorte ˆ ce que la premi�re ligne re�ue soit la derni�re ligne envoyŽe vers le client. **/
 
@@ -79,14 +82,28 @@ public class Client {
 			System.out.println("Awaiting command...");
 			String inputPort = input.nextLine();
 			System.out.println(inputPort+ " scanned");
-			out.writeUTF(inputPort);
-			System.out.println(inputPort+ " sent");
-			if (!inputPort.contains("exit")) { //fix
+			
+			if (inputPort.contains("upload ")) {
+				out.writeUTF(inputPort);
+				System.out.println(inputPort+ " sent");
+				sendFile(clientSocket, "download.png", out);
+				System.out.println("File send");
+				
+				String serverMessage = in.readUTF();
+				System.out.println(serverMessage);
+			}
+			else if (!inputPort.contains("exit")) { //fix
+				out.writeUTF(inputPort);
+				System.out.println(inputPort+ " sent");
+				
 				String serverMessage = in.readUTF();
 				System.out.println(serverMessage);
 				
 			}
-			else {
+			else if (inputPort.contains("exit")) {
+				out.writeUTF(inputPort);
+				System.out.println(inputPort+ " sent");
+				
 				String serverMessage = in.readUTF();
 				System.out.println(serverMessage);
 				isConnected = false;
@@ -94,6 +111,7 @@ public class Client {
 				isIPAddressValid = false;
 				clientSocket = null;
 			}
+			
 			System.out.println("client reach end of current loop");
 		}
 	}
@@ -159,6 +177,21 @@ public class Client {
 	    	// if any exception happens, IP is not valid
 	        return false;
 	    }
+	}
+	public static void sendFile(Socket clientSocket ,String file, DataOutputStream dos) {
+		try {
+			//DataOutputStream dos = new DataOutputStream(clientSocket.getOutputStream());
+			FileInputStream fis = new FileInputStream(file);
+			byte[] buffer = new byte[4096];
+			while (fis.read(buffer) > 0) {
+				dos.write(buffer);
+			}
+			fis.close();
+			//dos.close();
+		}
+		catch (Exception e) {
+			System.out.println("Exception SocketIO");
+		}		
 	}
 
 }
