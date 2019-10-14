@@ -7,6 +7,7 @@ import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 import java.io.DataOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -137,9 +138,8 @@ public class Server {
 						else if (command[0].equals(validKeywords[4])) {
 							//upload
 							if (command.length > 1) {
-								//out.writeUTF("Le fichier " + command[1] + " a bien ete televerse");
 								System.out.println("In");
-								upload(socket, in);
+								upload(socket, in, currentDirectory, command[1]);
 								System.out.println("In passed");
 								out.writeUTF("Le fichier " + command[1] + " a bien ete televerse");
 								System.out.println("Message send");
@@ -151,8 +151,13 @@ public class Server {
 						else if (command[0].equals(validKeywords[5])) {
 							//download
 							if (command.length > 1) {
-								download();
+								sendFile(socket, command[1], out, currentDirectory);
+								
+								String clientDSMessage = in.readUTF();
+								
+								System.out.println("Sending Message");
 								out.writeUTF("Le fichier " + command[1] + " a bien ete telecharger");
+								System.out.println("Message Sent");
 							}
 							else {
 								out.writeUTF("nom non trouver");
@@ -278,9 +283,9 @@ public class Server {
             }
             return false;
 		}
-		public static void upload(Socket socket, DataInputStream dis) {
+		public static void upload(Socket socket, DataInputStream dis, String currentDir, String fileName) {
 			System.out.println("Uploading...");
-			saveFile(socket, dis);
+			saveFile(socket, dis, currentDir, fileName);
 			System.out.println("Uploaded.");
 			
 		}
@@ -303,10 +308,10 @@ public class Server {
 			System.out.println(builtMessage);
 			return builtMessage;
 		}
-		public static void saveFile(Socket clientSock, DataInputStream dis) {
+		public static void saveFile(Socket clientSock, DataInputStream dis, String currentDir, String fileName) {
 			try {
 				//DataInputStream dis = new DataInputStream(clientSock.getInputStream());
-				FileOutputStream fos = new FileOutputStream("testfile.png");
+				FileOutputStream fos = new FileOutputStream(currentDir+"\\"+fileName);
 				byte[] buffer = new byte[4096];
 				
 				int filesize = 374816; // Send file size in separate msg
@@ -322,10 +327,27 @@ public class Server {
 				
 				fos.close();
 				//dis.close();
+				//dis = new DataInputStream(clientSock.getInputStream());
 			}
 			catch (Exception e) {
 				System.out.println("Exception SocketIO");
 			}
+		}
+		
+		public static void sendFile(Socket clientSocket ,String file, DataOutputStream dos, String currentDirectory) {
+			try {
+				//DataOutputStream dos = new DataOutputStream(clientSocket.getOutputStream());
+				FileInputStream fis = new FileInputStream(currentDirectory + "\\" +file);
+				byte[] buffer = new byte[4096];
+				while (fis.read(buffer) > 0) {
+					dos.write(buffer);
+				}
+				fis.close();
+				//dos.close();
+			}
+			catch (Exception e) {
+				System.out.println("Exception SocketIO");
+			}		
 		}
 	}
 }
