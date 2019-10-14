@@ -92,6 +92,10 @@ public class Client {
 					if (exists) {
 						out.writeUTF(inputPort);
 						System.out.println(inputPort+ " sent");
+						
+						//out.writeUTF(Long.toString(getSizeByte(tmpDir)));
+						out.writeLong(getSizeByte(tmpDir));
+						
 						sendFile(clientSocket, command[1], out);
 						System.out.println("File send");
 						
@@ -106,14 +110,21 @@ public class Client {
 			else if (inputPort.contains("download ")) {
 				if (command.length > 1) {
 					out.writeUTF(inputPort);
-					System.out.println(inputPort+ " sent");
-					saveFile(clientSocket, in, command[1]);
-					
-					out.writeUTF("OK");
-					
-					System.out.println("Awaiting Message");
 					String serverMessage = in.readUTF();
-					System.out.println(serverMessage);
+					if (serverMessage.equals("OK")) {
+						long fileSize = in.readLong();
+						System.out.println(inputPort+ " sent");
+						saveFile(clientSocket, in, command[1], fileSize);
+						
+						out.writeUTF("OK");
+						
+						System.out.println("Awaiting Message");
+						serverMessage = in.readUTF();
+						System.out.println(serverMessage);
+					}
+					else {
+						System.out.println("File does not exists on server");
+					}
 				}
 			}
 			else if (!inputPort.contains("exit")) { //fix
@@ -218,13 +229,13 @@ public class Client {
 		}		
 	}
 	
-	public static void saveFile(Socket clientSock, DataInputStream dis, String fileName) {
+	public static void saveFile(Socket clientSock, DataInputStream dis, String fileName, long fileSize) {
 		try {
 			//DataInputStream dis = new DataInputStream(clientSock.getInputStream());
 			FileOutputStream fos = new FileOutputStream(fileName);
 			byte[] buffer = new byte[4096];
 			
-			int filesize = 374816; // Send file size in separate msg
+			int filesize = (int) fileSize; // Send file size in separate msg
 			int read = 0;
 			int totalRead = 0;
 			int remaining = filesize;
@@ -252,6 +263,10 @@ public class Client {
 		catch (Exception e) {
 			return null;
 		}
+	}
+	
+	public static long getSizeByte(File file) {
+		return file.length();
 	}
 
 }
