@@ -28,8 +28,8 @@ public class Server {
 	private static ServerSocket listener;
 	
 	public static  void main(String[] args) throws Exception {
-		int portNumber = 5000;
-		boolean validPort = true;//devcode
+		int portNumber = 0;
+		boolean validPort = false;
 		
         while(!validPort) {
         	System.out.print("Enter a port number : ");
@@ -57,7 +57,6 @@ public class Server {
 		listener = new ServerSocket();
 		listener.setReuseAddress(true);
 		InetAddress serverIP = InetAddress.getByName(serverAddress);
-		
 		listener.bind(new InetSocketAddress(serverIP, serverPort));
 		
 		System.out.format("The server is running on %s:%d%n", serverAddress, serverPort);
@@ -71,9 +70,7 @@ public class Server {
 		finally {
 			listener.close();
 		}
-		
 	}
-	
 
 	private static class ClientHandler extends Thread {
 		private Socket socket;
@@ -92,43 +89,40 @@ public class Server {
 				DataInputStream in = new DataInputStream(socket.getInputStream());
 				DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 				
-				//ObjectOutputStream oos = new ObjectOutputStream(new BufferedOutputStream(socket.getOutputStream()));
-	            //oos.flush();
-	            //ObjectInputStream ois = new ObjectInputStream(new BufferedInputStream(socket.getInputStream()));
-				
-				out.writeUTF("Hello from server - you are client#" + clientNumber);
+				out.writeUTF("Hello from server - you are client #" + clientNumber);
 				boolean connected = true;
 				while (connected) {
 					System.out.println("reading UTF");
 					String clientMessage = in.readUTF();
 					System.out.println("UTF Read");
 					formatClientMessage(socket, clientMessage);
+					
 					if (validCommand(clientMessage)) {
 						String[] command = parseCommand(clientMessage);
 						if (command[0].equals(validKeywords[0])) {
-							//cd
+							//Commande cd
 							if (command.length > 1) {
 								currentDirectory = changeDirectory(currentDirectory, command[1]);
 							 	out.writeUTF("Vous etes dans le dossier " + command[1] +".");
 							}
 							else {
+						
 								out.writeUTF("nom non trouver");
 							}
 						}
 						else if (command[0].equals(validKeywords[1])) {
-							//cd..	
+							//Commande cd ..
 							currentDirectory = changeDirectory(currentDirectory, "..");
 							out.writeUTF("200");
 						}
 						else if (command[0].equals(validKeywords[2])) {
-							//ls
+							//Commande ls
 							listeDirectoryContent(currentDirectory, out);
 						}
 						else if (command[0].equals(validKeywords[3])) {
-							//mkdir
+							//Commande mkdir
 							if (command.length > 1) {
 								createDirectory(currentDirectory, command[1]);
-								//out.writeUTF("200");
 								out.writeUTF("Le dossier " + command[1] + " a ete cree.");
 							}
 							else {
@@ -136,7 +130,7 @@ public class Server {
 							}
 						}
 						else if (command[0].equals(validKeywords[4])) {
-							//upload
+							//Commande upload
 							if (command.length > 1) {
 								long size = in.readLong();
 								
@@ -151,7 +145,7 @@ public class Server {
 							}
 						}
 						else if (command[0].equals(validKeywords[5])) {
-							//download
+							//Commande download
 							if (command.length > 1) {
 								File tmpDir = new File(currentDirectory +"\\"+command[1]);
 								boolean exists = tmpDir.exists();
@@ -176,7 +170,7 @@ public class Server {
 							}
 						}
 						else if (command[0].equals(validKeywords[6])) {
-							//exit
+							//Commande exit
 							out.writeUTF("Vous avez ete deconnecte avec succes");
 							exit(socket, in, out);
 							connected = false;
@@ -203,6 +197,7 @@ public class Server {
 				System.out.println("Connection with client#" + clientNumber + "closed");
 			}
 		}
+		
 		public static boolean validCommand(String command) {
 			try {
 				if ( command == null || command.isEmpty() ) {
@@ -227,6 +222,7 @@ public class Server {
 				return false;
 			}
 		}
+		
 		public static String[] parseCommand(String command) {
 			try {
 				String[] splitedCommand = command.split("\\s+");
@@ -236,6 +232,7 @@ public class Server {
 				return null;
 			}
 		}
+		
 		public static String changeDirectory(String currentDir, String target) {
 			String newDir = "";
 			if (target.equals("..")) {
@@ -251,6 +248,7 @@ public class Server {
 			}
 			return newDir;
 		}
+		
 		public static String previousDirectory(String currentDir) {
 			while (currentDir.charAt(currentDir.length()-1) != '\\' && currentDir != null && currentDir.length() > 0) {
 				currentDir = currentDir.substring(0, currentDir.length() - 1);
@@ -258,9 +256,11 @@ public class Server {
 			currentDir = currentDir.substring(0, currentDir.length() - 1);
 			return currentDir;
 		}
+		
 		public static void createDirectory(String currentDir, String newDir) {
 			new File(currentDir+"\\"+newDir).mkdirs();
 		}
+		
 		public static String listeDirectoryContent(String currentDir, DataOutputStream out) {
 			String anwser = "";
 			System.out.println(currentDir); //dev code
@@ -284,6 +284,7 @@ public class Server {
 			}
             return anwser;
 		}
+		
 		public static boolean isDirValid(String currentDir, String targetDir) {
 			String anwser = "";
 			File dir = new File(currentDir);
@@ -295,15 +296,18 @@ public class Server {
             }
             return false;
 		}
+		
 		public static void upload(Socket socket, DataInputStream dis, String currentDir, String fileName, long fileSize) {
 			System.out.println("Uploading...");
 			saveFile(socket, dis, currentDir, fileName, fileSize);
 			System.out.println("Uploaded.");
 			
 		}
-		public static void download() {
-	
-		}
+		
+//		public static void download() {
+//	
+//		}
+		
 		public static void exit(Socket socket, DataInputStream in, DataOutputStream out) {
 			try {
 				in.close();
@@ -313,13 +317,15 @@ public class Server {
 			catch (IOException e) {
 			}
 		}
+		
 		public static String formatClientMessage(Socket socket, String message) {
 			DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd@HH:mm:ss");  
 			LocalDateTime now = LocalDateTime.now();  
-			String builtMessage = "["+(socket.getInetAddress().toString()).substring(1)+":"+socket.getLocalPort()+" - "+dtf.format(now)+"] : "+message;
+			String builtMessage = "["+(socket.getInetAddress().toString()).substring(1)+":"+socket.getLocalPort()+"-"+dtf.format(now)+"]: "+message;
 			System.out.println(builtMessage);
 			return builtMessage;
 		}
+		
 		public static void saveFile(Socket clientSock, DataInputStream dis, String currentDir, String fileName, long fileSize) {
 			try {
 				//DataInputStream dis = new DataInputStream(clientSock.getInputStream());
