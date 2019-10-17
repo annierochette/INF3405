@@ -28,11 +28,11 @@ public class Client {
 
 		Socket clientSocket = null;
 		int port = 0;
+		Scanner input = new Scanner(System.in);
 		String serverAddress = "";
 		boolean isPortValid = false;
 		boolean isIPAddressValid = false;
 		boolean isConnected = false;
-		Scanner input = new Scanner(System.in);
 		DataInputStream in = null;
 		DataOutputStream out = null;
 		
@@ -145,50 +145,16 @@ public class Client {
 					
 				String serverMessage = in.readUTF();
 				System.out.println(serverMessage);
+				input.close();
 				isConnected = false;
 				isPortValid = false;
 				isIPAddressValid = false;
 				clientSocket = null;
 			}
-				
 			System.out.println("client reach end of current loop");
 		}
 	}
 
-	// Fonction permettant de lire un fichier et de stocker son contenu dans une liste.
-//	private static List<String> readFile(String nomFichier) throws IOException {
-//		List<String> listOfLines = new ArrayList<String>();
-//		String line = null;
-//		FileReader fileReader = null;
-//		BufferedReader bufferedReader = null;
-//		try {
-//			fileReader = new FileReader(nomFichier);
-//
-//			bufferedReader = new BufferedReader(fileReader);
-//
-//			while ((line = bufferedReader.readLine()) != null) {
-//				listOfLines.add(line);
-//			}
-//		} finally {
-//			fileReader.close();
-//			bufferedReader.close();
-//		}
-//		return listOfLines;
-//	}
-
-//	// Fonction permettant d'écrire dans un fichier les données contenues dans le stack reçu du serveur.
-//	private static void writeToFile(Stack<String> myStack, String nomFichier) throws IOException {
-//		BufferedWriter out = null;
-//		try {
-//			out = new BufferedWriter(new FileWriter(nomFichier));
-//			while (!myStack.isEmpty()) {
-//				out.write(myStack.pop() + "\n");
-//			}
-//		} finally {
-//			out.close();
-//		}
-//	}
-	
 	public static boolean checkIPAddressValide (String IPAddress) {
 	    try {
 	    	//null check
@@ -220,14 +186,12 @@ public class Client {
 	
 	public static void sendFile(Socket clientSocket ,String file, DataOutputStream dos) {
 		try {
-			//DataOutputStream dos = new DataOutputStream(clientSocket.getOutputStream());
 			FileInputStream fis = new FileInputStream(file);
 			byte[] buffer = new byte[4096];
 			while (fis.read(buffer) > 0) {
 				dos.write(buffer);
 			}
 			fis.close();
-			//dos.close();
 		}
 		catch (Exception e) {
 			System.out.println("Exception SocketIO");
@@ -236,7 +200,6 @@ public class Client {
 	
 	public static void saveFile(Socket clientSock, DataInputStream dis, String fileName, long fileSize) {
 		try {
-			//DataInputStream dis = new DataInputStream(clientSock.getInputStream());
 			FileOutputStream fos = new FileOutputStream(fileName);
 			byte[] buffer = new byte[4096];
 			
@@ -252,8 +215,7 @@ public class Client {
 			}
 			System.out.println("done saving");
 			fos.close();
-			//dis.close();
-			//dis = new DataInputStream(clientSock.getInputStream());
+
 		}
 		catch (Exception e) {
 			System.out.println("Exception SocketIO");

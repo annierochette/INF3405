@@ -236,12 +236,10 @@ public class Server {
 		public static String changeDirectory(String currentDir, String target) {
 			String newDir = "";
 			if (target.equals("..")) {
-				System.out.println(previousDirectory(currentDir));//devcode
 				return previousDirectory(currentDir);
 			}
 			if (isDirValid(currentDir, target)) {
 				newDir = currentDir +"\\"+target;
-				System.out.println(newDir);//devcode
 			}
 			else {
 				//nothing
@@ -263,7 +261,6 @@ public class Server {
 		
 		public static String listeDirectoryContent(String currentDir, DataOutputStream out) {
 			String anwser = "";
-			System.out.println(currentDir); //dev code
 			File dir = new File(currentDir);
             File childFiles[] = dir.listFiles();
 			String childs[] = dir.list();
@@ -304,10 +301,6 @@ public class Server {
 			
 		}
 		
-//		public static void download() {
-//	
-//		}
-		
 		public static void exit(Socket socket, DataInputStream in, DataOutputStream out) {
 			try {
 				in.close();
@@ -328,7 +321,6 @@ public class Server {
 		
 		public static void saveFile(Socket clientSock, DataInputStream dis, String currentDir, String fileName, long fileSize) {
 			try {
-				//DataInputStream dis = new DataInputStream(clientSock.getInputStream());
 				FileOutputStream fos = new FileOutputStream(currentDir+"\\"+fileName);
 				byte[] buffer = new byte[4096];
 				
@@ -344,8 +336,6 @@ public class Server {
 				}
 				
 				fos.close();
-				//dis.close();
-				//dis = new DataInputStream(clientSock.getInputStream());
 			}
 			catch (Exception e) {
 				System.out.println("Exception SocketIO");
@@ -354,14 +344,12 @@ public class Server {
 		
 		public static void sendFile(Socket clientSocket ,String file, DataOutputStream dos, String currentDirectory) {
 			try {
-				//DataOutputStream dos = new DataOutputStream(clientSocket.getOutputStream());
 				FileInputStream fis = new FileInputStream(currentDirectory + "\\" +file);
 				byte[] buffer = new byte[4096];
 				while (fis.read(buffer) > 0) {
 					dos.write(buffer);
 				}
 				fis.close();
-				//dos.close();
 			}
 			catch (Exception e) {
 				System.out.println("Exception SocketIO");
